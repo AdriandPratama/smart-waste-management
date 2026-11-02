@@ -1,66 +1,176 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Smart Waste Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+A web and mobile-based Smart Waste Management System designed to help users report waste locations, manage waste reports, and support waste classification using Machine Learning.
 
-## About Laravel
+## Project Overview
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+This project is developed as part of the Fullstack Developer Technical Coding Test at Bilcode Technology.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Technology Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Backend:** Laravel 12
+- **Database:** MySQL
+- **Authentication:** Laravel Sanctum
+- **Frontend:** Laravel Blade (planned)
+- **Mobile:** Flutter (planned)
+- **Machine Learning:** Python, TensorFlow/Keras (planned)
+- **AI Service:** FastAPI (planned)
 
-## Learning Laravel
+## Current Features
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- User registration and login.
+- Admin and User role management.
+- Token-based API authentication.
+- Create, read, update, and delete waste reports.
+- Waste report ownership validation.
+- Waste report status management.
+- Report status history.
+- Admin-only access to all reports and status updates.
+- GPS coordinate storage.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+## Database Structure
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+Main database tables:
 
-## Laravel Sponsors
+- `users`
+- `waste_categories`
+- `waste_reports`
+- `report_images`
+- `report_status_histories`
+- `personal_access_tokens`
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+## Installation
 
-### Premium Partners
+### 1. Clone Repository
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+```bash
+git clone https://github.com/AdriandPratama/smart-waste-management.git
+cd smart-waste-management
+```
 
-## Contributing
+### 2. Install Dependencies
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+composer install
+```
 
-## Code of Conduct
+### 3. Configure Environment
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Copy the environment file:
 
-## Security Vulnerabilities
+```bash
+cp .env.example .env
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+On Windows PowerShell, use:
 
-## License
+```powershell
+Copy-Item .env.example .env
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Generate application key:
+
+```bash
+php artisan key:generate
+```
+
+### 4. Configure Database
+
+Create a MySQL database named:
+
+```text
+smart_waste_management
+```
+
+Configure the `.env` file:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=smart_waste_management
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Update the database username and password according to your local configuration.
+
+### 5. Run Migrations
+
+```bash
+php artisan migrate
+```
+
+### 6. Start Development Server
+
+```bash
+php artisan serve
+```
+
+Application URL:
+
+```text
+http://127.0.0.1:8000
+```
+
+## API Documentation
+
+Base URL:
+
+```text
+http://127.0.0.1:8000/api
+```
+
+### Authentication
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/register` | Register a new user |
+| POST | `/login` | User login |
+| POST | `/logout` | User logout |
+| GET | `/user` | Get authenticated user |
+
+### Waste Reports
+
+| Method | Endpoint | Access |
+|---|---|---|
+| GET | `/my-reports` | User / Admin |
+| POST | `/reports` | User / Admin |
+| GET | `/reports/{id}` | Owner / Admin |
+| PUT | `/reports/{id}` | Owner / Admin |
+| DELETE | `/reports/{id}` | Owner / Admin |
+| GET | `/reports` | Admin |
+| PATCH | `/reports/{id}/status` | Admin |
+
+### Authentication Header
+
+Protected endpoints require a Sanctum bearer token.
+
+```http
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Accept: application/json
+```
+
+### Report Status Values
+
+- `pending`
+- `verified`
+- `in_progress`
+- `completed`
+- `rejected`
+
+## API Testing
+
+API endpoints can be tested using Thunder Client or Postman.
+
+## Project Status
+
+The initial backend and REST API implementation has been completed, including authentication, report CRUD operations, status management, and role-based authorization.
+
+Frontend, mobile application, and Machine Learning integration are part of the subsequent development stages.
+
+## Developer
+
+**Adriand Pratama**
+
+GitHub: [AdriandPratama]([https](https://github.com/AdriandPratama/smart-waste-management.git)])
