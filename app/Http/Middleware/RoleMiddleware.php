@@ -17,9 +17,13 @@ class RoleMiddleware
         }
 
         if ($request->user()->role !== $role) {
-            return response()->json([
-                'message' => 'You do not have permission to access this resource.',
-            ], 403);
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'You do not have permission to access this resource.',
+                ], 403);
+            }
+
+            abort(403, 'You do not have permission to access this page.');
         }
 
         return $next($request);
