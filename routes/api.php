@@ -1,9 +1,11 @@
+
 <?php
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\WasteReportController;
+use App\Models\WasteCategory;
 
 // Authentication
 Route::post('/register', [AuthController::class, 'register']);
@@ -16,6 +18,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/user', function (Request $request) {
         return response()->json($request->user());
+    });
+
+    // Get Categories
+    Route::get('/categories', function () {
+        return response()->json(
+            WasteCategory::select('id', 'name', 'description')->get()
+        );
     });
 
     // User dan Admin

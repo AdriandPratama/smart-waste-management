@@ -9,6 +9,7 @@ use App\Models\ReportImage;
 use App\Models\ReportStatusHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 
 class WasteReportController extends Controller
 {
@@ -34,35 +35,81 @@ class WasteReportController extends Controller
     }
 
     // Membuat laporan baru
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'category_id' => 'nullable|exists:waste_categories,id',
-            'latitude' => 'nullable|numeric|between:-90,90',
-            'longitude' => 'nullable|numeric|between:-180,180',
-        ]);
 
-        $report = WasteReport::create([
-            ...$validated,
-            'user_id' => $request->user()->id,
-            'status' => 'pending',
-        ]);
+public function store(Request $request)
+{
+    $validated = $request->validate([
+        'title' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'category_id' => 'nullable|exists:waste_categories,id',
+        'latitude' => 'nullable|numeric|between:-90,90',
+        'longitude' => 'nullable|numeric|between:-180,180',
+        'photo' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+    ]);
 
-        ReportStatusHistory::create([
-            'report_id' => $report->id,
-            'old_status' => null,
-            'new_status' => 'pending',
-            'changed_by' => $request->user()->id,
-            'notes' => 'Report created.',
-        ]);
+    $imagePath = null;
+
+    try {
+        // Simpan foto ke storage
+        if ($request->hasFile('photo')) {
+            $imagePath = $request->file('photo')
+                ->store('reports', 'public');
+        }
+
+        // Simpan laporan dan riwayat status
+        $report = DB::transaction(function () use (
+            $request,
+            $validated,
+            $imagePath
+        ) {
+            $report = WasteReport::create([
+                'user_id' => $request->user()->id,
+                'category_id' => $validated['category_id'] ?? null,
+                'title' => $validated['title'],
+                'description' => $validated['description'] ?? null,
+                'latitude' => $validated['latitude'] ?? null,
+                'longitude' => $validated['longitude'] ?? null,
+                'status' => 'pending',
+            ]);
+
+            // Simpan informasi foto
+            if ($imagePath) {
+                $report->images()->create([
+                    'image_path' => $imagePath,
+                ]);
+            }
+
+            // Catat riwayat status
+            ReportStatusHistory::create([
+                'report_id' => $report->id,
+                'old_status' => null,
+                'new_status' => 'pending',
+                'changed_by' => $request->user()->id,
+                'notes' => 'Report created.',
+            ]);
+
+            return $report->load([
+                'user',
+                'category',
+                'images',
+            ]);
+        });
 
         return response()->json([
             'message' => 'Waste report created successfully.',
-            'data' => $report->load(['user', 'category']),
+            'data' => $report,
         ], 201);
+
+    } catch (\Throwable $e) {
+        // Hapus foto jika proses database gagal
+        if ($imagePath) {
+            Storage::disk('public')->delete($imagePath);
+        }
+
+        throw $e;
     }
+}
+
 
     // Menampilkan detail laporan
     public function show(Request $request, WasteReport $wasteReport)
