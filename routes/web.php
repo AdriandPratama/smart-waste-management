@@ -43,6 +43,9 @@ Route::middleware(['auth', 'role:user'])->group(function () {
     Route::get('/user/dashboard', [UserDashboardController::class, 'index'])
         ->name('user.dashboard');
 
+        Route::post('/user/reports/classify', [UserReportController::class, 'classifyImage'])
+    ->name('user.reports.classify');
+
      Route::get('/user/reports/create', [UserReportController::class, 'create'])
     ->name('user.reports.create');
 

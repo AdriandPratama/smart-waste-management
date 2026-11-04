@@ -11,6 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 
 class UserReportController extends Controller
 {
@@ -20,6 +21,80 @@ class UserReportController extends Controller
 
         return view('user.reports.create', compact('categories'));
     }
+
+
+   public function classifyImage(Request $request)
+{
+    // Maksimal waktu eksekusi PHP: 180 detik
+    set_time_limit(180);
+
+    $request->validate([
+        'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:5120',
+    ]);
+
+    try {
+        $image = $request->file('image');
+
+        $response = Http::connectTimeout(10)
+            ->timeout(120)
+            ->attach(
+                'file',
+                file_get_contents($image->getRealPath()),
+                $image->getClientOriginalName()
+            )
+            ->post(config('services.ml_api.url') . '/predict');
+
+        if ($response->failed()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'ML API gagal memproses gambar.',
+            ], 502);
+        }
+
+        $result = $response->json();
+
+        $categoryMap = [
+            'organic' => 'Organik',
+            'paper' => 'Kertas',
+            'plastic' => 'Plastik',
+        ];
+
+        $predictedClass = $result['predicted_class'] ?? null;
+
+        if (!isset($categoryMap[$predictedClass])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kategori hasil prediksi tidak dikenali.',
+            ], 422);
+        }
+
+        $category = WasteCategory::where(
+            'name',
+            $categoryMap[$predictedClass]
+        )->first();
+
+        if (!$category) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kategori tidak ditemukan di database.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'category_id' => $category->id,
+            'category' => $category->name,
+            'confidence' => $result['confidence'],
+            'all_predictions' => $result['all_predictions'] ?? [],
+        ]);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Tidak dapat terhubung ke ML API.',
+        ], 500);
+    }
+}
 
     public function store(Request $request)
     {
