@@ -184,6 +184,50 @@ static Future<Map<String, dynamic>> submitReport({
 }
 
 
+static Future<Map<String, dynamic>> classifyImage(
+  File image,
+) async {
+  final prefs = await SharedPreferences.getInstance();
+  final token = prefs.getString('token');
+
+  if (token == null) {
+    throw Exception('Token tidak ditemukan. Silakan login kembali.');
+  }
+
+  final request = http.MultipartRequest(
+    'POST',
+    Uri.parse('${ApiConfig.baseUrl}/classify'),
+  );
+
+  request.headers.addAll({
+    'Accept': 'application/json',
+    'Authorization': 'Bearer $token',
+  });
+
+  request.files.add(
+    await http.MultipartFile.fromPath(
+      'file',
+      image.path,
+    ),
+  );
+
+  final streamedResponse = await request.send().timeout(
+    const Duration(seconds: 90),
+  );
+
+  final response = await http.Response.fromStream(streamedResponse);
+
+  final data = jsonDecode(response.body);
+
+  if (response.statusCode == 200) {
+    return Map<String, dynamic>.from(data);
+  }
+
+  throw Exception(
+    data['message'] ?? 'Gagal melakukan klasifikasi gambar.',
+  );
+}
+
   static Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token');

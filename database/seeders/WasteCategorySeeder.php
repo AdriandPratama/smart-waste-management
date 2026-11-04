@@ -12,19 +12,15 @@ class WasteCategorySeeder extends Seeder
         $categories = [
             [
                 'name' => 'Organik',
-                'description' => 'Sampah yang mudah terurai secara alami.',
+                'description' => 'Sampah organik yang mudah terurai secara alami.',
             ],
             [
-                'name' => 'Anorganik',
-                'description' => 'Sampah yang sulit terurai secara alami.',
+                'name' => 'Kertas',
+                'description' => 'Sampah kertas dan produk berbahan kertas.',
             ],
             [
-                'name' => 'B3',
-                'description' => 'Sampah bahan berbahaya dan beracun.',
-            ],
-            [
-                'name' => 'Lainnya',
-                'description' => 'Kategori sampah lainnya.',
+                'name' => 'Plastik',
+                'description' => 'Sampah berbahan plastik yang dapat didaur ulang.',
             ],
         ];
 

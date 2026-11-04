@@ -24,11 +24,20 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     // Get Categories
-    Route::get('/categories', function () {
-        return response()->json(
-            WasteCategory::select('id', 'name', 'description')->get()
-        );
-    });
+Route::get('/categories', function () {
+    return response()->json(
+        WasteCategory::select('id', 'name', 'description')
+            ->whereIn('name', ['Organik', 'Kertas', 'Plastik'])
+            ->orderByRaw("
+                CASE name
+                    WHEN 'Organik' THEN 1
+                    WHEN 'Kertas' THEN 2
+                    WHEN 'Plastik' THEN 3
+                END
+            ")
+            ->get()
+    );
+});
 
     // User dan Admin
     Route::get('/my-reports', [WasteReportController::class, 'myReports']);

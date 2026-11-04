@@ -23,16 +23,18 @@ class _ReportPageState extends State<ReportPage> {
   int? selectedCategoryId;
 
   List<Map<String, dynamic>> categories = [];
+
   bool isLoadingCategories = false;
   bool isSubmitting = false;
+  bool isClassifying = false;
+  bool isLoadingLocation = false;
 
   File? selectedImage;
 
-  // Variabel koordinat GPS
+  Map<String, dynamic>? classificationResult;
+
   double? latitude;
   double? longitude;
-
-  bool isLoadingLocation = false;
 
   @override
   void initState() {
@@ -81,13 +83,17 @@ class _ReportPageState extends State<ReportPage> {
       if (image != null) {
         setState(() {
           selectedImage = File(image.path);
+          classificationResult = null;
+          selectedCategoryId = null;
         });
       }
     } catch (e) {
       if (!mounted) return;
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Gagal mengambil foto: $e')),
+        SnackBar(
+          content: Text('Gagal mengambil foto: $e'),
+        ),
       );
     }
   }
@@ -123,6 +129,100 @@ class _ReportPageState extends State<ReportPage> {
     );
   }
 
+  // Mengirim foto ke API Laravel untuk klasifikasi AI
+  Future<void> classifyImage() async {
+    if (selectedImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pilih foto sampah terlebih dahulu.'),
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      isClassifying = true;
+      classificationResult = null;
+    });
+
+    try {
+      final result = await ApiService.classifyImage(selectedImage!);
+
+      if (!mounted) return;
+
+      final data = Map<String, dynamic>.from(result['data']);
+
+      final predictedClass = data['predicted_class']
+          .toString()
+          .toLowerCase()
+          .trim();
+
+      // Mencocokkan hasil AI dengan kategori database
+      final categoryNames = {
+        'organic': 'organik',
+        'paper': 'kertas',
+        'plastic': 'plastik',
+      };
+
+      final targetCategory = categoryNames[predictedClass];
+
+      int? matchedCategoryId;
+
+      if (targetCategory != null) {
+        for (final category in categories) {
+          final categoryName = category['name']
+              .toString()
+              .toLowerCase()
+              .trim();
+
+          if (categoryName == targetCategory) {
+            matchedCategoryId = int.tryParse(
+              category['id'].toString(),
+            );
+            break;
+          }
+        }
+      }
+
+      setState(() {
+        classificationResult = data;
+
+        if (matchedCategoryId != null) {
+          selectedCategoryId = matchedCategoryId;
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            matchedCategoryId != null
+                ? 'AI mendeteksi ${targetCategory!.toUpperCase()}. '
+                    'Kategori otomatis dipilih!'
+                : 'Klasifikasi berhasil, tetapi kategori belum ditemukan.',
+          ),
+          backgroundColor: matchedCategoryId != null
+              ? Colors.green
+              : Colors.orange,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Klasifikasi gagal: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isClassifying = false;
+        });
+      }
+    }
+  }
+
   // Mengambil lokasi GPS
   Future<void> getCurrentLocation() async {
     setState(() {
@@ -130,8 +230,8 @@ class _ReportPageState extends State<ReportPage> {
     });
 
     try {
-      // Periksa apakah GPS aktif
-      bool serviceEnabled =
+      // Memeriksa apakah GPS aktif
+      final serviceEnabled =
           await Geolocator.isLocationServiceEnabled();
 
       if (!serviceEnabled) {
@@ -140,7 +240,7 @@ class _ReportPageState extends State<ReportPage> {
         );
       }
 
-      // Periksa permission lokasi
+      // Memeriksa izin lokasi
       LocationPermission permission =
           await Geolocator.checkPermission();
 
@@ -154,12 +254,13 @@ class _ReportPageState extends State<ReportPage> {
 
       if (permission == LocationPermission.deniedForever) {
         throw Exception(
-          'Izin lokasi ditolak permanen. Aktifkan melalui pengaturan aplikasi.',
+          'Izin lokasi ditolak permanen. '
+          'Aktifkan melalui pengaturan aplikasi.',
         );
       }
 
-      // Ambil koordinat GPS
-      Position position = await Geolocator.getCurrentPosition(
+      // Mengambil koordinat GPS
+      final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.high,
           timeLimit: Duration(seconds: 30),
@@ -196,71 +297,192 @@ class _ReportPageState extends State<ReportPage> {
     }
   }
 
-// Mengirim laporan ke API Laravel
-Future<void> submitReport() async {
-  if (titleController.text.trim().isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Judul laporan wajib diisi.'),
-        backgroundColor: Colors.red,
-      ),
-    );
-    return;
-  }
-
-  if (selectedCategoryId == null) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text('Silakan pilih kategori sampah.'),
-      backgroundColor: Colors.red,
-    ),
-  );
-  return;
-}
-
-  setState(() {
-    isSubmitting = true;
-  });
-
-  try {
-    final result = await ApiService.submitReport(
-      title: titleController.text.trim(),
-      description: descriptionController.text.trim(),
-      categoryId: selectedCategoryId,
-      latitude: latitude,
-      longitude: longitude,
-      photo: selectedImage,
-    );
-
-    if (!mounted) return;
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          result['message'] ?? 'Laporan berhasil dikirim.',
+  // Mengirim laporan ke API Laravel
+  Future<void> submitReport() async {
+    if (titleController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Judul laporan wajib diisi.'),
+          backgroundColor: Colors.red,
         ),
-        backgroundColor: Colors.green,
-      ),
-    );
+      );
+      return;
+    }
 
-    Navigator.pop(context, true);
-  } catch (e) {
-    if (!mounted) return;
+    if (selectedCategoryId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan pilih kategori sampah.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Gagal mengirim laporan: $e'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  } finally {
-    if (mounted) {
-      setState(() {
-        isSubmitting = false;
-      });
+    setState(() {
+      isSubmitting = true;
+    });
+
+    try {
+      final result = await ApiService.submitReport(
+        title: titleController.text.trim(),
+        description: descriptionController.text.trim(),
+        categoryId: selectedCategoryId,
+        latitude: latitude,
+        longitude: longitude,
+        photo: selectedImage,
+      );
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result['message'] ?? 'Laporan berhasil dikirim.',
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal mengirim laporan: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isSubmitting = false;
+        });
+      }
     }
   }
-}
+
+  // Widget hasil klasifikasi AI
+  Widget buildClassificationResult() {
+    if (classificationResult == null) {
+      return const SizedBox.shrink();
+    }
+
+    final predictions =
+        classificationResult!['all_predictions']
+            as Map<String, dynamic>;
+
+    final predictedClass =
+        classificationResult!['predicted_class'];
+
+    final confidence =
+        classificationResult!['confidence'];
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xFF16A34A),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(
+                Icons.auto_awesome,
+                color: Color(0xFF16A34A),
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Hasil Klasifikasi AI',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 16),
+
+          Text(
+            'Prediksi: ${predictedClass.toString().toUpperCase()}',
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF16A34A),
+            ),
+          ),
+
+          const SizedBox(height: 6),
+
+          Text(
+            'Confidence: $confidence%',
+            style: const TextStyle(fontSize: 14),
+          ),
+
+          const SizedBox(height: 16),
+
+          const Text(
+            'Probabilitas setiap kategori:',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          ...predictions.entries.map((entry) {
+            final value = (entry.value as num).toDouble();
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment:
+                        MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(entry.key.toUpperCase()),
+                      Text('${value.toStringAsFixed(2)}%'),
+                    ],
+                  ),
+
+                  const SizedBox(height: 5),
+
+                  LinearProgressIndicator(
+                    value: (value / 100).clamp(0.0, 1.0),
+                    minHeight: 8,
+                    borderRadius: BorderRadius.circular(10),
+                    backgroundColor: Colors.grey.shade200,
+                    color: const Color(0xFF16A34A),
+                  ),
+                ],
+              ),
+            );
+          }),
+
+          const SizedBox(height: 4),
+
+          const Text(
+            'Kategori otomatis dipilih berdasarkan hasil AI. '
+            'Kamu tetap bisa mengubah kategori secara manual.',
+            style: TextStyle(
+              fontSize: 12,
+              color: Colors.grey,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -273,6 +495,7 @@ Future<void> submitReport() async {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+
       appBar: AppBar(
         title: const Text(
           'Buat Laporan Sampah',
@@ -280,6 +503,7 @@ Future<void> submitReport() async {
         ),
         backgroundColor: Colors.white,
       ),
+
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -292,9 +516,12 @@ Future<void> submitReport() async {
                 fontWeight: FontWeight.bold,
               ),
             ),
+
             const SizedBox(height: 8),
+
             const Text(
-              'Bantu menjaga lingkungan dengan melaporkan sampah yang kamu temukan.',
+              'Bantu menjaga lingkungan dengan melaporkan '
+              'sampah yang kamu temukan.',
               style: TextStyle(color: Colors.grey),
             ),
 
@@ -305,7 +532,9 @@ Future<void> submitReport() async {
               'Judul Laporan',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
+
             const SizedBox(height: 8),
+
             TextField(
               controller: titleController,
               decoration: const InputDecoration(
@@ -318,13 +547,18 @@ Future<void> submitReport() async {
 
             const SizedBox(height: 20),
 
-            // Kategori sampah dari API
+            // Kategori sampah
             const Text(
               'Kategori Sampah',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
+
             const SizedBox(height: 8),
+
             DropdownButtonFormField<int>(
+              key: ValueKey(
+                '${selectedCategoryId}_${categories.length}',
+              ),
               initialValue: selectedCategoryId,
               decoration: InputDecoration(
                 hintText: isLoadingCategories
@@ -356,7 +590,9 @@ Future<void> submitReport() async {
               'Deskripsi',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
+
             const SizedBox(height: 8),
+
             TextField(
               controller: descriptionController,
               maxLines: 4,
@@ -375,6 +611,7 @@ Future<void> submitReport() async {
               'Foto Sampah',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
+
             const SizedBox(height: 8),
 
             GestureDetector(
@@ -399,6 +636,7 @@ Future<void> submitReport() async {
                               selectedImage!,
                               fit: BoxFit.cover,
                             ),
+
                             Positioned(
                               bottom: 0,
                               left: 0,
@@ -440,6 +678,46 @@ Future<void> submitReport() async {
               ),
             ),
 
+            // Tombol klasifikasi AI
+            if (selectedImage != null) ...[
+              const SizedBox(height: 16),
+
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: isClassifying
+                      ? null
+                      : classifyImage,
+                  icon: isClassifying
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.auto_awesome),
+                  label: Text(
+                    isClassifying
+                        ? 'Menganalisis Gambar...'
+                        : 'Klasifikasi dengan AI',
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2563EB),
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ),
+            ],
+
+            // Hasil klasifikasi AI
+            if (classificationResult != null) ...[
+              const SizedBox(height: 16),
+              buildClassificationResult(),
+            ],
+
             const SizedBox(height: 20),
 
             // Lokasi GPS
@@ -447,6 +725,7 @@ Future<void> submitReport() async {
               'Lokasi GPS',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
+
             const SizedBox(height: 8),
 
             Container(
@@ -468,7 +747,9 @@ Future<void> submitReport() async {
                         Icons.location_on_outlined,
                         color: Color(0xFF16A34A),
                       ),
+
                       const SizedBox(width: 10),
+
                       Expanded(
                         child: Text(
                           latitude != null && longitude != null
@@ -484,11 +765,14 @@ Future<void> submitReport() async {
 
                   if (latitude != null && longitude != null) ...[
                     const SizedBox(height: 16),
+
                     Text(
                       'Latitude: $latitude',
                       style: const TextStyle(fontSize: 13),
                     ),
+
                     const SizedBox(height: 6),
+
                     Text(
                       'Longitude: $longitude',
                       style: const TextStyle(fontSize: 13),
@@ -527,32 +811,32 @@ Future<void> submitReport() async {
 
             const SizedBox(height: 30),
 
-// Tombol kirim laporan
-SizedBox(
-  width: double.infinity,
-  height: 52,
-  child: ElevatedButton(
-    onPressed: isSubmitting ? null : submitReport,
-    style: ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF16A34A),
-      foregroundColor: Colors.white,
-      disabledBackgroundColor: Colors.grey,
-    ),
-    child: isSubmitting
-        ? const SizedBox(
-            width: 22,
-            height: 22,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-              color: Colors.white,
+            // Tombol kirim laporan
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: isSubmitting ? null : submitReport,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF16A34A),
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: Colors.grey,
+                ),
+                child: isSubmitting
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        'Kirim Laporan',
+                        style: TextStyle(fontSize: 16),
+                      ),
+              ),
             ),
-          )
-        : const Text(
-            'Kirim Laporan',
-            style: TextStyle(fontSize: 16),
-          ),
-  ),
-),
           ],
         ),
       ),
