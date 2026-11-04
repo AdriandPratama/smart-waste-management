@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\WasteReportController;
 use App\Models\WasteCategory;
+use App\Http\Controllers\Api\ClassificationController;
 
 // Authentication
 Route::post('/register', [AuthController::class, 'register']);
@@ -13,6 +14,8 @@ Route::post('/login', [AuthController::class, 'login']);
 
 // Routes yang membutuhkan login
 Route::middleware('auth:sanctum')->group(function () {
+
+    Route::post('/classify', [ClassificationController::class, 'classify']);
 
     Route::post('/logout', [AuthController::class, 'logout']);
 
