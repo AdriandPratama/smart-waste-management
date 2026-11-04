@@ -21,9 +21,9 @@
                     Dashboard
                 </a>
 
-                <a href="#" class="block px-4 py-3 hover:bg-gray-700 rounded-lg">
+            <!--    <a href="#" class="block px-4 py-3 hover:bg-gray-700 rounded-lg">
                     Laporan Sampah
-                </a>
+                </a> -->
 
               <a href="{{ route('admin.users.index') }}"
    class="block px-4 py-2 rounded-lg hover:bg-gray-100">
