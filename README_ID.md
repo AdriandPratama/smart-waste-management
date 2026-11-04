@@ -1,115 +1,178 @@
-INDONESIAN VERSION
-
 # Smart Waste Management System
 
-Smart Waste Management System merupakan aplikasi berbasis web dan mobile yang dirancang untuk membantu pengguna melaporkan lokasi sampah, mengelola laporan sampah, serta mengklasifikasikan gambar sampah menggunakan Machine Learning.
+Aplikasi berbasis web dan Android untuk pelaporan sampah, klasifikasi gambar menggunakan Machine Learning, serta pemantauan status laporan.
 
-## Gambaran Umum Proyek
+**Dikembangkan untuk:** Technical Coding Test Fullstack Developer – Bilcode Technology
 
-Proyek ini dikembangkan sebagai bagian dari Technical Coding Test Fullstack Developer di Bilcode Technology.
+**Website Demo:** https://smartwasteapp.my.id
 
-Sistem terdiri dari backend dan aplikasi web menggunakan Laravel, aplikasi mobile menggunakan Flutter, serta layanan Machine Learning berbasis Python.
+**Repository GitHub:** https://github.com/AdriandPratama/smart-waste-management
 
-## Teknologi yang Digunakan
+---
 
-| Komponen | Teknologi |
-|---|---|
-| Backend | Laravel 12 |
-| Web Frontend | Laravel Blade |
-| Database | MySQL |
-| Autentikasi | Laravel Sanctum |
-| Aplikasi Mobile | Flutter, Dart |
-| Machine Learning | Python, TensorFlow, Keras, MobileNetV2 |
-| Layanan ML API | FastAPI, Uvicorn |
+## 1. Gambaran Umum Project
 
-## Arsitektur Sistem
+Smart Waste Management merupakan platform terintegrasi yang memungkinkan pengguna melaporkan kondisi sampah melalui website maupun aplikasi Android.
 
-Aplikasi ini terdiri dari tiga komponen utama:
+Pengguna dapat mengirim laporan dengan melampirkan gambar dan koordinat lokasi, melakukan klasifikasi gambar sampah menggunakan Machine Learning, serta memantau perkembangan status laporan.
 
-1. **Laravel Backend dan Web Application**: Menangani autentikasi, hak akses pengguna, laporan sampah, pengelolaan laporan, serta komunikasi dengan layanan Machine Learning.
-2. **Flutter Mobile Application**: Menyediakan akses melalui perangkat mobile untuk pelaporan dan klasifikasi sampah.
-3. **Machine Learning Service**: Memproses gambar sampah dan memprediksi kategorinya.
+Administrator dapat memeriksa laporan yang masuk, melakukan verifikasi, dan memperbarui status laporan.
 
-### Alamat Server Lokal
+Sistem ini terdiri dari tiga komponen utama:
+- Aplikasi Website
+- Aplikasi Mobile Android
+- Layanan Klasifikasi Machine Learning
 
-| Layanan | URL |
-|---|---|
-| Laravel Backend dan Web | http://127.0.0.1:8001 |
-| Laravel REST API | http://127.0.0.1:8001/api |
-| FastAPI Machine Learning | http://127.0.0.1:8000 |
-| Dokumentasi Swagger FastAPI | http://127.0.0.1:8000/docs |
+## 2. Fitur Utama
 
-Alamat tersebut digunakan untuk pengembangan lokal. Jika aplikasi di-deploy ke server, alamat perlu disesuaikan.
-
-## Fitur Aplikasi
-
-### Backend dan Web Application
+### Website Pengguna
 - Registrasi dan login pengguna.
-- Pengelolaan role Admin dan User.
-- Autentikasi API menggunakan Laravel Sanctum.
-- Create, read, update, dan delete laporan sampah.
-- Validasi kepemilikan laporan.
-- Pengelolaan status laporan sampah.
-- Riwayat perubahan status laporan.
-- Admin dapat mengakses seluruh laporan dan memperbarui statusnya.
-- Penyimpanan koordinat GPS.
-- Integrasi dengan layanan Machine Learning.
+- Membuat laporan sampah dengan deskripsi dan gambar.
+- Mengambil koordinat lokasi menggunakan GPS.
+- Klasifikasi gambar sampah menggunakan AI.
+- Melihat riwayat dan perkembangan status laporan.
 
-### Mobile Application
+### Dashboard Admin
+- Melihat laporan sampah dari pengguna.
+- Memeriksa detail laporan dan gambar.
+- Melakukan verifikasi laporan.
+- Memperbarui status laporan.
+- Memantau statistik laporan.
+
+### Aplikasi Android
 - Autentikasi pengguna.
-- Pelaporan sampah melalui aplikasi mobile.
-- Pemilihan kategori sampah.
-- Klasifikasi gambar sampah secara otomatis.
-- Pemilihan kategori secara manual.
+- Menampilkan informasi dashboard dan kategori sampah.
+- Mengirim laporan dengan gambar dan lokasi.
+- Melihat riwayat laporan.
+- Menerima pembaruan status verifikasi laporan.
 
 ### Machine Learning
 - Klasifikasi gambar menggunakan MobileNetV2.
-- Tiga kategori sampah: Organic, Paper, dan Plastic.
-- Layanan FastAPI untuk integrasi model.
-- Evaluasi model dan pembuatan laporan hasil klasifikasi.
+- Mendukung tiga kategori sampah:
+  - Organik
+  - Kertas
+  - Plastik
+- FastAPI sebagai layanan prediksi gambar.
+- Menghasilkan kategori prediksi dan nilai confidence.
 
-## Hasil Evaluasi Machine Learning
+## 3. Teknologi yang Digunakan
 
-Model MobileNetV2 dievaluasi menggunakan dataset pengujian yang terdiri dari 512 gambar.
+| Komponen | Teknologi |
+|---|---|
+| Backend | Laravel, PHP |
+| Frontend | Laravel Blade |
+| Database | MySQL |
+| Autentikasi API | Laravel Sanctum |
+| Mobile | Flutter, Dart |
+| Machine Learning | Python, TensorFlow, Keras |
+| Model Klasifikasi | MobileNetV2 |
+| ML API | FastAPI, Uvicorn |
+| Web Server | Nginx |
+| Sistem Operasi Server | Ubuntu 24.04 |
+| Deployment | VPS, HTTPS |
 
-| Metrik Evaluasi | Hasil |
+## 4. Arsitektur Sistem
+
+```mermaid
+flowchart TD
+    U[Pengguna] --> W[Aplikasi Website]
+    U --> M[Aplikasi Android]
+    W --> L[Laravel Backend]
+    M --> L
+    L --> DB[(Database MySQL)]
+    L --> ML[FastAPI ML Service]
+    ML --> AI[Model MobileNetV2]
+    A[Administrator] --> W
+    W --> DB
+```
+
+## 5. Alur Pelaporan Sampah
+
+1. Pengguna login melalui website atau aplikasi Android.
+2. Pengguna membuat laporan dengan melampirkan gambar dan lokasi.
+3. Gambar dapat diklasifikasikan menggunakan layanan Machine Learning.
+4. Laravel menyimpan laporan ke database MySQL.
+5. Administrator memeriksa dan memverifikasi laporan.
+6. Status laporan terbaru ditampilkan kepada pengguna.
+
+## 6. Hasil Evaluasi Machine Learning
+
+Model MobileNetV2 dievaluasi menggunakan dataset pengujian terpisah yang terdiri dari 512 gambar dengan tiga kategori sampah.
+
+| Metrik | Hasil |
 |---|---:|
 | Jumlah Gambar Pengujian | 512 |
 | Prediksi Benar | 496 |
-| Akurasi | 96,88% |
-| Loss | 0,1074 |
+| Akurasi Pengujian | 96,88% |
+| Loss Pengujian | 0,1074 |
 
-### Hasil Klasifikasi
+### Classification Report
 
-| Kategori | Precision | Recall | F1-Score |
+| Kategori | Precision | Recall | F1-score |
 |---|---:|---:|---:|
-| Organic | 1,00 | 0,98 | 0,99 |
-| Paper | 0,95 | 0,94 | 0,94 |
-| Plastic | 0,97 | 0,98 | 0,97 |
+| Organik | 1,00 | 0,98 | 0,99 |
+| Kertas | 0,95 | 0,94 | 0,94 |
+| Plastik | 0,97 | 0,98 | 0,97 |
 
-Detail hasil evaluasi tersedia di direktori `ml/results/`.
+Hasil tersebut menunjukkan performa model pada dataset pengujian yang digunakan saat evaluasi. Akurasi yang sama tidak dijamin untuk setiap gambar dalam penggunaan sebenarnya.
 
-## Struktur Database
+File model dan hasil evaluasi tersedia di direktori `ml/`.
 
-Tabel utama yang digunakan:
+## 7. Deployment Production
 
-- `users`
-- `waste_categories`
-- `waste_reports`
-- `report_images`
-- `report_status_histories`
-- `personal_access_tokens`
+Aplikasi telah di-deploy pada VPS menggunakan Ubuntu 24.04.
 
-## Instalasi dan Konfigurasi
+**Website Production:** https://smartwasteapp.my.id
 
-### 1. Clone Repository
+Komponen production:
+- Nginx Web Server
+- Laravel Application
+- MySQL Database
+- FastAPI Machine Learning Service
+- HTTPS menggunakan Certbot
+
+Website dan aplikasi Android telah diuji menggunakan backend production, termasuk proses pengiriman laporan dan verifikasi oleh administrator.
+
+## 8. Struktur Repository
+
+```text
+smart-waste-management/
+├── app/
+├── bootstrap/
+├── config/
+├── database/
+├── docs/
+├── ml/
+├── mobile/
+├── public/
+├── resources/
+├── routes/
+├── storage/
+├── tests/
+├── README.md
+└── README_ID.md
+```
+
+## 9. Instalasi dan Konfigurasi Lokal
+
+### Persyaratan
+
+Sebelum menjalankan project, pastikan perangkat sudah memiliki:
+- PHP dan Composer
+- MySQL
+- Python 3.12
+- Flutter SDK
+- Android SDK
+- Git
+
+### Langkah 1: Clone Repository
 
 ```bash
 git clone https://github.com/AdriandPratama/smart-waste-management.git
 cd smart-waste-management
 ```
 
-### 2. Persiapan Backend dan Web Application
+### Langkah 2: Konfigurasi Laravel
 
 Install dependency PHP:
 
@@ -117,10 +180,18 @@ Install dependency PHP:
 composer install
 ```
 
-Salin file environment:
+Buat file environment.
+
+Windows PowerShell:
 
 ```powershell
 Copy-Item .env.example .env
+```
+
+Linux/macOS:
+
+```bash
+cp .env.example .env
 ```
 
 Generate application key:
@@ -129,106 +200,107 @@ Generate application key:
 php artisan key:generate
 ```
 
-### 3. Konfigurasi Database
+Buat database MySQL, lalu sesuaikan konfigurasi database pada file `.env`:
 
-Buat database MySQL dengan nama:
-
-```text
-smart_waste_management
-```
-
-Atur koneksi database pada file `.env`:
-
-```env
+```dotenv
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
 DB_DATABASE=smart_waste_management
-DB_USERNAME=root
-DB_PASSWORD=
+DB_USERNAME=your_database_user
+DB_PASSWORD=your_database_password
 ```
 
-Sesuaikan username dan password dengan konfigurasi database lokal.
-
-Jalankan migration:
+Jalankan migration dan seeder kategori sampah:
 
 ```bash
 php artisan migrate
+php artisan db:seed --class=WasteCategorySeeder
 ```
 
-### 4. Konfigurasi URL Machine Learning API
+Buat symbolic link untuk file upload:
 
-Tambahkan atau sesuaikan variabel berikut pada file `.env`:
+```bash
+php artisan storage:link
+```
 
-```env
+Atur URL layanan Machine Learning pada `.env`:
+
+```dotenv
 ML_API_URL=http://127.0.0.1:8000
 ```
 
-### 5. Menjalankan Laravel Server
-
-Jalankan Laravel pada port 8001:
+Jalankan Laravel pada port `8001`:
 
 ```bash
 php artisan serve --port=8001
 ```
 
-Alamat aplikasi:
+URL Website lokal: `http://127.0.0.1:8001`
 
-```text
-http://127.0.0.1:8001
-```
+Base URL API lokal: `http://127.0.0.1:8001/api`
 
-### 6. Persiapan Machine Learning Service
+### Langkah 3: Menjalankan Machine Learning Service
 
-Buka terminal baru dan masuk ke direktori ML:
+Buka terminal baru:
 
-```powershell
+```bash
 cd ml
+python -m venv venv
 ```
 
-Buat dan aktifkan virtual environment jika belum tersedia:
+Aktifkan virtual environment.
+
+Windows PowerShell:
 
 ```powershell
-python -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
 
-Install dependency:
+Linux/macOS:
+
+```bash
+source venv/bin/activate
+```
+
+Install dependency Python dan jalankan FastAPI:
 
 ```bash
 pip install -r requirements.txt
-```
-
-Jalankan layanan FastAPI:
-
-```bash
 uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Alamat FastAPI:
+Base URL FastAPI: `http://127.0.0.1:8000`
 
-```text
-http://127.0.0.1:8000
-```
+Dokumentasi API: `http://127.0.0.1:8000/docs`
 
-Dokumentasi Swagger:
+Laravel akan mengakses layanan Machine Learning melalui URL yang ditentukan pada `ML_API_URL`.
 
-```text
-http://127.0.0.1:8000/docs
-```
+### Langkah 4: Menjalankan Aplikasi Flutter
 
-### 7. Persiapan Mobile Application
-
-Buka terminal baru dan masuk ke direktori mobile:
-
-```powershell
-cd mobile
-```
-
-Install dependency Flutter:
+Buka terminal baru:
 
 ```bash
+cd mobile
 flutter pub get
+```
+
+Atur base URL API pada file:
+
+`lib/config/api_config.dart`
+
+Untuk Android Emulator:
+
+```dart
+static const String baseUrl = 'http://10.0.2.2:8001/api';
+```
+
+Untuk perangkat Android fisik, gunakan alamat IP LAN komputer development yang dapat dijangkau perangkat.
+
+Untuk production:
+
+```dart
+static const String baseUrl = 'https://smartwasteapp.my.id/api';
 ```
 
 Jalankan aplikasi:
@@ -237,81 +309,64 @@ Jalankan aplikasi:
 flutter run
 ```
 
-Pastikan Flutter sudah terpasang dan emulator Android atau perangkat fisik tersedia.
+### Langkah 5: Build APK Release
 
-## Menjalankan Seluruh Sistem
+Dari direktori `mobile/`, jalankan:
 
-Untuk menjalankan sistem secara lokal, pastikan layanan berikut aktif:
+```bash
+flutter build apk --release
+```
 
-1. Database MySQL.
-2. Laravel backend dan web application pada port `8001`.
-3. FastAPI Machine Learning pada port `8000`.
-4. Flutter application melalui emulator Android atau perangkat fisik.
-
-## Dokumentasi API
-
-Base URL Laravel REST API:
+File APK akan dihasilkan pada:
 
 ```text
-http://127.0.0.1:8001/api
+build/app/outputs/flutter-apk/app-release.apk
 ```
 
-### Autentikasi
+## 10. Dokumentasi REST API
 
-| Method | Endpoint | Keterangan |
-|---|---|---|
-| POST | `/register` | Registrasi pengguna |
-| POST | `/login` | Login pengguna |
-| POST | `/logout` | Logout pengguna |
-| GET | `/user` | Mendapatkan data pengguna yang sedang login |
+Base URL API untuk development lokal:
 
-### Waste Reports
+`http://127.0.0.1:8001/api`
 
-| Method | Endpoint | Hak Akses |
-|---|---|---|
-| GET | `/my-reports` | User / Admin |
-| POST | `/reports` | User / Admin |
-| GET | `/reports/{id}` | Owner / Admin |
-| PUT | `/reports/{id}` | Owner / Admin |
-| DELETE | `/reports/{id}` | Owner / Admin |
-| GET | `/reports` | Admin |
-| PATCH | `/reports/{id}/status` | Admin |
+API menyediakan fungsi:
+- Registrasi dan login pengguna.
+- Autentikasi pengguna.
+- Pengambilan kategori sampah.
+- Klasifikasi gambar.
+- Pengiriman laporan sampah.
+- Pengambilan riwayat dan detail laporan.
+- Verifikasi laporan oleh administrator.
 
-### Header Autentikasi
+Endpoint API yang dilindungi menggunakan autentikasi bearer token Laravel Sanctum.
 
-Endpoint yang dilindungi memerlukan bearer token dari Laravel Sanctum.
+Detail endpoint, request, dan response tersedia di direktori `docs/`.
 
-```http
-Authorization: Bearer YOUR_ACCESS_TOKEN
-Accept: application/json
-```
+## 11. Struktur Database
 
-### Status Laporan
+Tabel utama yang digunakan:
+- `users`
+- `waste_categories`
+- `waste_reports`
+- `report_images`
+- `report_status_histories`
+- `personal_access_tokens`
 
-- `pending`
-- `verified`
-- `in_progress`
-- `completed`
-- `rejected`
+Entity Relationship Diagram (ERD) tersedia di direktori `docs/`.
 
-## Pengujian API
+## 12. Keamanan
 
-Endpoint Laravel REST API dapat diuji menggunakan Postman atau Thunder Client.
+- Kredensial production disimpan pada environment server.
+- File `.env` tidak boleh diunggah ke GitHub.
+- Akses production menggunakan HTTPS.
+- Layanan Machine Learning dibatasi untuk akses internal server.
 
-Machine Learning API dapat diperiksa dan diuji melalui dokumentasi Swagger FastAPI:
-
-```text
-http://127.0.0.1:8000/docs
-```
-
-## Status Proyek
-
-Komponen backend, web application, mobile application, dan Machine Learning telah diimplementasikan sebagai bagian dari technical coding test.
-
-Model Machine Learning memperoleh akurasi sebesar 96,88% pada dataset pengujian.
-
-## Developer
+## 13. Developer
 
 **Adriand Pratama**
 
 GitHub: https://github.com/AdriandPratama
+
+---
+
+Project ini dikembangkan sebagai bagian dari Technical Coding Test Fullstack Developer di Bilcode Technology.
