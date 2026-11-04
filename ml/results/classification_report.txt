@@ -1,0 +1,15 @@
+MOBILENETV2 CLASSIFICATION REPORT
+=================================
+
+Test Accuracy: 96.88%
+Test Loss: 0.1074
+
+              precision    recall  f1-score   support
+
+     organic       1.00      0.98      0.99       122
+       paper       0.95      0.94      0.94       133
+     plastic       0.97      0.98      0.97       257
+
+    accuracy                           0.97       512
+   macro avg       0.97      0.97      0.97       512
+weighted avg       0.97      0.97      0.97       512

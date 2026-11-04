@@ -1,6 +1,7 @@
 
 import tensorflow as tf
 import numpy as np
+import pandas as pd
 
 from pathlib import Path
 from sklearn.metrics import (
@@ -97,15 +98,15 @@ print(cm)
 
 print("\nClassification Report:")
 
-print(
-    classification_report(
-        y_true,
-        y_pred,
-        labels=range(len(class_names)),
-        target_names=class_names,
-        zero_division=0
-    )
+report = classification_report(
+    y_true,
+    y_pred,
+    labels=range(len(class_names)),
+    target_names=class_names,
+    zero_division=0
 )
+
+print(report)
 
 
 # =====================================
@@ -115,6 +116,7 @@ print(
 RESULT_DIR = BASE_DIR / "results"
 RESULT_DIR.mkdir(parents=True, exist_ok=True)
 
+# Save confusion matrix
 np.savetxt(
     RESULT_DIR / "confusion_matrix.csv",
     cm,
@@ -122,5 +124,39 @@ np.savetxt(
     fmt="%d"
 )
 
+# Save classification report as TXT
+with open(
+    RESULT_DIR / "classification_report.txt",
+    "w",
+    encoding="utf-8"
+) as file:
+    file.write("MOBILENETV2 CLASSIFICATION REPORT\n")
+    file.write("=================================\n\n")
+    file.write(f"Test Accuracy: {test_accuracy * 100:.2f}%\n")
+    file.write(f"Test Loss: {test_loss:.4f}\n\n")
+    file.write(report)
+
+# Generate classification report as CSV
+report_dict = classification_report(
+    y_true,
+    y_pred,
+    labels=range(len(class_names)),
+    target_names=class_names,
+    zero_division=0,
+    output_dict=True
+)
+
+report_df = pd.DataFrame(report_dict).transpose()
+
+report_df.to_csv(
+    RESULT_DIR / "classification_report.csv",
+    index=True
+)
+
 print("\nEvaluation completed!")
-print("Confusion matrix saved to:", RESULT_DIR)
+
+print("Results saved to:", RESULT_DIR)
+print("\nGenerated files:")
+print("- confusion_matrix.csv")
+print("- classification_report.txt")
+print("- classification_report.csv")
